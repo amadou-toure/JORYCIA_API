@@ -26,13 +26,15 @@ func AddPerfume(c *fiber.Ctx)error{
 	for i, item := range newPerfume.Image {
 
 		path:= "./Files/Images/"
-		filename := strings.ReplaceAll(fmt.Sprintf("%s %d %d"+".b64", newPerfume.Name,time.Now().Unix(),i), " ", "")
+		filename := strings.ReplaceAll(fmt.Sprintf("%s %d %d", newPerfume.Name,time.Now().Unix(),i), " ", "")
 		fullpath:= filepath.Join(path,filename)
-		err := os.WriteFile(fullpath, []byte(item), 0644)
+		err:=DecodeBase64ToWebP(item,fullpath)
+		// err := os.WriteFile(fullpath, []byte(item), 0644)
 		if err != nil {
 			return err  
 		}
-		newPerfume.Image[i]=os.Getenv("api_url")+"/image/"+filename
+		newPerfume.Image[i]=os.Getenv("api_url")+"/image/"+filename+".webp"
+		
 	}
 
 	result,err:=Database.Mg.Db.Collection("perfumes").InsertOne(c.Context(),newPerfume)
