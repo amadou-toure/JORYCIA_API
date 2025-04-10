@@ -22,17 +22,17 @@ func AddPerfume(c *fiber.Ctx)error{
 	if err != nil {
 		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
 	}
-
+	//todo:add a condition to reject request when the image already exist
 	for i, item := range newPerfume.Image {
 
 		path:= "./Files/Images/"
-		filename := strings.ReplaceAll(fmt.Sprintf("%s %d %d"+".png", newPerfume.Name,time.Now().Unix(),i), " ", "")
+		filename := strings.ReplaceAll(fmt.Sprintf("%s %d %d"+".b64", newPerfume.Name,time.Now().Unix(),i), " ", "")
 		fullpath:= filepath.Join(path,filename)
 		err := os.WriteFile(fullpath, []byte(item), 0644)
 		if err != nil {
 			return err  
 		}
-		newPerfume.Image[i]=fullpath
+		newPerfume.Image[i]=os.Getenv("api_url")+"/image/"+filename
 	}
 
 	result,err:=Database.Mg.Db.Collection("perfumes").InsertOne(c.Context(),newPerfume)
@@ -44,20 +44,48 @@ func AddPerfume(c *fiber.Ctx)error{
  
 }
 
+func GetPerfumes(c *fiber.Ctx)error{
+	filter:=bson.D{{}}
+	var perfumes []models.Perfume
+	 result,err := Database.Mg.Db.Collection("perfumes").Find(c.Context(),filter)
+	 if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return c.Status(HTTP_CODE.Not_found).SendString("items not found")
+		}
+		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
+	 }
+	 err = result.All(c.Context(),&perfumes)
+	 if err != nil {
+		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
+	 }
+	 return c.Status(HTTP_CODE.Ok).JSON(perfumes)
 
-// func UploadOneFile(c *fiber.Ctx, File_name string,File_type string) error {
-    
-//     File, err := c.FormFile(File_type)
-// 	if err != nil {
-//     	return c.Status(HTTP_CODE.Server_error).SendString("no file uploaded:" + err.Error())
-// 	}
-// 	File.Filename=File_name
-// 	err = c.SaveFile(File,"./Files/"+File_type+"/"+File.Filename)
-// 	if err != nil {
-// 		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
-// 	}
-//     return nil
-// }
+}
+
+func GetOnePerfume(c *fiber.Ctx) error{
+	id:= c.Params("id")
+	ID,err:= primitive.ObjectIDFromHex(id)
+	if err != nil{
+		return c.Status(HTTP_CODE.Bad_request).SendString("unvalid id")
+	}
+	filter:= bson.D{{Key: "_id",Value: ID}}
+	perfume:=new(models.Perfume)
+	query:= Database.Mg.Db.Collection("perfumes").FindOne(c.Context(),filter)
+	if query.Err() != nil{
+		if query.Err() == mongo.ErrNoDocuments{
+		return c.Status(HTTP_CODE.Not_found).SendString("Perfumes not found")
+		}
+		return c.Status(HTTP_CODE.Server_error).SendString(query.Err().Error())
+	}
+	err=query.Decode(perfume)
+	if err != nil{
+		if err == mongo.ErrNoDocuments{
+			return c.Status(HTTP_CODE.Not_found).SendString("Perfumes not found 2")
+		}
+	}
+	return c.Status(HTTP_CODE.Ok).JSON(perfume)
+
+}
 
 
 
@@ -68,7 +96,7 @@ func DeletePerfume(c *fiber.Ctx)error{
 		return c.Status(HTTP_CODE.Bad_request).SendString("invalid id")
 	}
 	filter:=bson.D{{Key:"_id",Value: perfumeId}}
-	err = Database.Mg.Db.Collection("Perfumes").FindOneAndDelete(c.Context(),filter).Err()
+	err = Database.Mg.Db.Collection("perfumes").FindOneAndDelete(c.Context(),filter).Err()
 	if err != nil{
 		if err == mongo.ErrNoDocuments{
 			return c.Status(HTTP_CODE.Not_found).SendString("perfume not foound")
