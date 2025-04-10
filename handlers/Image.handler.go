@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+//function to download the images from the file name
 func GetImage(c *fiber.Ctx) error {
     fileName := c.Params("fileName")
     if fileName == ""{
