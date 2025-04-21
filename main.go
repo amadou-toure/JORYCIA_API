@@ -11,10 +11,16 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := Database.Connect()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Erreur lors du chargement du fichier .env")
+	}
+
+	err = Database.Connect()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -38,12 +44,12 @@ func main() {
 	routes.ImageRoutes(app)
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		err := c.SendString(os.Getenv("PORT"))
+		err := c.SendString(os.Getenv("API_URL"))
 		if err != nil {
 			return c.Status(HTTP_CODE.Server_error).SendString("Server failed to respond")
 		}
 		return nil
 	})
 
-	app.Listen(":8080")
+	app.Listen(os.Getenv("PORT"))
 }
