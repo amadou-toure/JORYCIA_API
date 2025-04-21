@@ -12,6 +12,8 @@ import (
 	webp "github.com/chai2010/webp"
 )
 
+//not my code!!!!!!
+
 // DecodeBase64ToWebP converts a Base64-encoded image to WebP format
 func DecodeBase64ToWebP(base64Data, outputPath string) error {
 	// Clean data URL prefix if present
@@ -32,7 +34,7 @@ func DecodeBase64ToWebP(base64Data, outputPath string) error {
 	}
 
 	// Create output file
-	outFile, err := os.Create(outputPath+".webp")
+	outFile, err := os.Create(outputPath)
 	if err != nil {
 		return err
 	}

@@ -10,7 +10,7 @@ type User struct {
 	Password  string    `bson:"password,omitempty" json:"-"` // hashé, jamais renvoyé côté client
 	Phone     string    `bson:"phone,omitempty" json:"phone,omitempty"`
 	Address   Address   `bson:"address" json:"address"`       // struct séparée ci-dessous
-	Orders    []string  `bson:"orders,omitempty" json:"orders,omitempty"` // IDs des commandes
+	Orders    []string  `bson:"orders,omitempty" json:"orders,omitempty"`
 	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
 	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`
 }	

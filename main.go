@@ -10,6 +10,7 @@ import (
 	"jorycia_api/routes"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
@@ -27,7 +28,12 @@ func main() {
 		AppName:       "jorycia_api v1.0.0",
 	})
 
-	routes.PerfumeRoutes(app)
+	// Use CORS middleware with permissive settings
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+	}))
+
+	routes.ProductRoutes(app)
 	routes.UserRoutes(app)
 	routes.ImageRoutes(app)
 
