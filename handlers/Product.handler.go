@@ -23,7 +23,7 @@ func CreateStripeProduct(c *fiber.Ctx, p *models.Product) error {
 	
 	var imagePointers []*string
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
-	for _, img := range p.Images {
+	for _, img := range p.Image {
 		imgCopy := img
 		imagePointers = append(imagePointers, &imgCopy)
 	}
@@ -56,6 +56,7 @@ func CreateStripeProduct(c *fiber.Ctx, p *models.Product) error {
 }
 
 
+
 func AddProduct(c *fiber.Ctx)error{
 	var newProduct models.Product
 	err := c.BodyParser(&newProduct)
@@ -72,7 +73,7 @@ func AddProduct(c *fiber.Ctx)error{
 		return c.Status(HTTP_CODE.Bad_request).SendString("Product already exists")
 	}
 	//todo:add a condition to reject request when the image already exist
-	for i, item := range newProduct.Images {
+	for i, item := range newProduct.Image {
 
 		path:= "./Files/Images/"
 		filename := strings.ReplaceAll(fmt.Sprintf("%s_%d_%d.webp", newProduct.Name,time.Now().Unix(),i), " ", "")
@@ -81,7 +82,7 @@ func AddProduct(c *fiber.Ctx)error{
 		if err != nil {
 			return err  
 		}
-		newProduct.Images[i] = fmt.Sprintf("%s:%s/image/%s", os.Getenv("API_URL"), os.Getenv("PORT"), filename)
+		newProduct.Image[i] = fmt.Sprintf("%s%s/image/%s", os.Getenv("API_URL"), os.Getenv("PORT"), filename)
 		
 	}
 	err = CreateStripeProduct(c, &newProduct)
