@@ -42,6 +42,7 @@ func main() {
 	routes.ProductRoutes(app)
 	routes.UserRoutes(app)
 	routes.ImageRoutes(app)
+	routes.PaymentRoutes(app)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		err := c.SendString(os.Getenv("API_URL"))
