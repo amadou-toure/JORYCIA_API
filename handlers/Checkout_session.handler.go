@@ -22,6 +22,9 @@ func CreateCheckoutSession(c *fiber.Ctx) error {
 
 	params := &stripe.CheckoutSessionParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}), 
+		ShippingAddressCollection: &stripe.CheckoutSessionShippingAddressCollectionParams{
+			AllowedCountries: stripe.StringSlice([]string{"CA"}),
+		},
 		//AutomaticTax: &stripe.CheckoutSessionAutomaticTaxParams{
         //Enabled: stripe.Bool(true),},
 		Mode:               stripe.String(string(stripe.CheckoutSessionModePayment)),
@@ -50,23 +53,22 @@ func CreateCheckoutSession(c *fiber.Ctx) error {
 type StripeCheckoutSessionStatus struct {
 	Status stripe.CheckoutSessionStatus `json:"status"`
 	PaymentStatus stripe.PaymentIntentStatus `json:"payment_status"`
+	ShippingAddress *stripe.Address `json:"shipping_address"`
 }
 
 func GetCheckoutSession(c *fiber.Ctx) error {
-	fmt.Println("Geting CheckoutSession ...")
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 	id := c.Params("session_id")
-	fmt.Println("id:",id)
 	// Retrieve the Checkout Session
 	sess, err := session.Get(id, nil)
 	if err != nil {
 		fmt.Println("Stripe session retrieval failed: ", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Session retrieval failed"})
 	}
-	fmt.Println(stripe.CheckoutSessionStatus(sess.Status))
-	fmt.Println(stripe.CheckoutSessionStatus(sess.PaymentStatus))
+	
 	return c.JSON(StripeCheckoutSessionStatus{
 		Status: stripe.CheckoutSessionStatus(sess.Status),
 		PaymentStatus: stripe.PaymentIntentStatus(sess.PaymentStatus),
+		ShippingAddress: sess.CustomerDetails.Address,
 	})
 }

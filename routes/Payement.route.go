@@ -9,6 +9,6 @@ import (
 
 func PaymentRoutes(router *fiber.App) {
 	paymentRoutes := router.Group("/payment")
-	paymentRoutes.Post("/ProceedToPayment/", utils.Token.VerifyToken("your-secret-key"), handlers.CreateCheckoutSession)
+	paymentRoutes.Post("/ProceedToPayment/", handlers.CreateCheckoutSession)
 	paymentRoutes.Get("/GetCheckoutSession/:session_id", utils.Token.VerifyToken("your-secret-key"), handlers.GetCheckoutSession)
 }

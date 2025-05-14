@@ -1,70 +1,124 @@
 package handlers
 
 import (
-	"time"
-
+	"fmt"
 	"jorycia_api/Database"
 	"jorycia_api/HTTP_CODE"
 	"jorycia_api/models"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // CartItem structure pour la réception du panier côté client
-type CartItem struct {
-	ProductID string `json:"product_id"`
-	Quantity  int64  `json:"quantity"`
-}
 
 // CreateOrder crée une nouvelle commande à partir d'un panier
 func CreateOrder(c *fiber.Ctx) error {
-	userID := c.Query("user_id") // ou récupéré via middleware auth
+	var Order models.Order
+	err := c.BodyParser(&Order)
+	if err != nil {
+		return c.Status(HTTP_CODE.Bad_request).SendString("Erreur de parsing de la requête")
+	}
+	fmt.Println(Order)
+	_, err = Database.Mg.Db.Collection("Order").InsertOne(c.Context(), Order)
+	if err != nil {
+		return c.Status(HTTP_CODE.Server_error).SendString("Erreur insertion de la commande")
+		}
+	return c.Status(HTTP_CODE.Created).JSON(Order)
+}
+func GetOneOrder(c *fiber.Ctx) error {
+	
+
+	orderID := c.Params("id")
+	
+	if orderID == "" {
+		return c.Status(HTTP_CODE.Bad_request).SendString("Order ID manquant")
+	}
+	id:= c.Params("id")
+	ID,err:= primitive.ObjectIDFromHex(id)
+	if err != nil{
+		return c.Status(HTTP_CODE.Bad_request).SendString("unvalid id")
+	}
+	filter:= bson.D{{Key: "_id",Value: ID}}
+	product:=new(models.Order)
+	query:= Database.Mg.Db.Collection("Order").FindOne(c.Context(),filter)
+	if query.Err() != nil{
+		if query.Err() == mongo.ErrNoDocuments{
+		return c.Status(HTTP_CODE.Not_found).SendString("Orders not found")
+		}
+		return c.Status(HTTP_CODE.Server_error).SendString(query.Err().Error())
+	}
+	err=query.Decode(product)
+	if err != nil{
+		if err == mongo.ErrNoDocuments{
+			return c.Status(HTTP_CODE.Not_found).SendString("Orders not found 2")
+		}
+	}
+	return c.Status(HTTP_CODE.Ok).JSON(product)
+}
+func GetOrders(c* fiber.Ctx) error {
+	filter:=bson.D{{}}
+	var orders []models.Order
+	 result,err := Database.Mg.Db.Collection("Order").Find(c.Context(),filter)
+	 if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return c.Status(HTTP_CODE.Not_found).SendString("items not found")
+		}
+		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
+	 }
+	 err = result.All(c.Context(),&orders)
+	 if err != nil {
+		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
+	 }
+	 return c.Status(HTTP_CODE.Ok).JSON(orders)
+}
+func GetUsersOrders(c *fiber.Ctx) error {
+	userID := c.Params("user_id")
 	if userID == "" {
 		return c.Status(HTTP_CODE.Bad_request).SendString("User ID manquant")
 	}
 
-	var cart []CartItem
-	if err := c.BodyParser(&cart); err != nil {
-		return c.Status(HTTP_CODE.Bad_request).SendString("Données de panier invalides")
-	}
-
-	var orderItems []models.OrderItem
-	var total float64
-
-	for _, item := range cart {
-		var product models.Product
-		err := Database.Mg.Db.Collection("Product").FindOne(c.Context(), bson.M{"_id": item.ProductID}).Decode(&product)
-		if err != nil {
-			return c.Status(HTTP_CODE.Not_found).SendString("Produit non trouvé: " + item.ProductID)
-		}
-
-		orderItems = append(orderItems, models.OrderItem{
-			ProductID:   product.ID,
-			ProductName: product.Name,
-			Quantity:    item.Quantity,
-			UnitPrice:   product.Price,
-		})
-		total += product.Price * float64(item.Quantity)
-	}
-
-	now := time.Now()
-	order := models.Order{
-		UserID:        userID,
-		Items:         orderItems,
-		CreatedAt:     &now,
-		UpdatedAt:     &now,
-		PaymentStatus: stringPtr("pending"),
-	}
-
-	_, err := Database.Mg.Db.Collection("Order").InsertOne(c.Context(), order)
+	filter := bson.D{{"user_id", userID}}
+	var orders []models.Order
+	result, err := Database.Mg.Db.Collection("Order").Find(c.Context(), filter)
 	if err != nil {
-		return c.Status(HTTP_CODE.Server_error).SendString("Erreur enregistrement commande")
+		if err == mongo.ErrNoDocuments {
+			return c.Status(HTTP_CODE.Not_found).SendString("items not found")
+		}
+		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
+	}
+	err = result.All(c.Context(), &orders)
+	if err != nil {
+		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
+	}
+	return c.Status(HTTP_CODE.Ok).JSON(orders)
+}
+func UpdateOrder(c *fiber.Ctx) error {
+	orderID := c.Params("order_id")
+	if orderID == "" {
+		return c.Status(HTTP_CODE.Bad_request).SendString("Order ID manquant")
 	}
 
-	return c.Status(HTTP_CODE.Created).JSON(order)
+	var order models.Order
+	err := c.BodyParser(&order)
+	if err != nil {
+		return c.Status(HTTP_CODE.Bad_request).SendString("Erreur de parsing de la requête")
+	}
+	filter := bson.D{{"_id", orderID}}
+	update := bson.D{{"$set", bson.D{{"status", order.Status}}}}
+	result, err := Database.Mg.Db.Collection("Order").UpdateOne(c.Context(), filter, update)
+	if err != nil {
+		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
+	}
+	if result.ModifiedCount == 0 {
+		return c.Status(HTTP_CODE.Not_found).SendString("Order not found")
+	}
+	return c.Status(HTTP_CODE.Ok).SendString("Order updated")
 }
 
 func stringPtr(s string) *string {
 	return &s
 }
+
