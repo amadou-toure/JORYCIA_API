@@ -14,6 +14,6 @@ func ProductRoutes(app *fiber.App) {
     productRoutes.Get("/", handlers.GetProducts)
     productRoutes.Get("/:id", handlers.GetOneProduct)
     productRoutes.Post("/", utils.Token.VerifyToken("your-secret-key"), handlers.AddProduct)
-    //productRoutes.Put("/:id", handlers.UpdateProduct)
+    productRoutes.Put("/:id", handlers.UpdateProduct)
     productRoutes.Delete("/:id", handlers.DeleteProduct)
 }

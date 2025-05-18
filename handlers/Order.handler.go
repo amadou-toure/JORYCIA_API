@@ -80,7 +80,7 @@ func GetUsersOrders(c *fiber.Ctx) error {
 		return c.Status(HTTP_CODE.Bad_request).SendString("User ID manquant")
 	}
 
-	filter := bson.D{{"user_id", userID}}
+	filter := bson.D{{Key:"user_id", Value: userID}}
 	var orders []models.Order
 	result, err := Database.Mg.Db.Collection("Order").Find(c.Context(), filter)
 	if err != nil {
@@ -106,8 +106,12 @@ func UpdateOrder(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(HTTP_CODE.Bad_request).SendString("Erreur de parsing de la requête")
 	}
-	filter := bson.D{{"_id", orderID}}
-	update := bson.D{{"$set", bson.D{{"status", order.Status}}}}
+	filter := bson.D{{Key:"_id", Value:orderID}}
+	update := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "status", Value: order.Status},
+		}},
+	}
 	result, err := Database.Mg.Db.Collection("Order").UpdateOne(c.Context(), filter, update)
 	if err != nil {
 		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
@@ -116,9 +120,5 @@ func UpdateOrder(c *fiber.Ctx) error {
 		return c.Status(HTTP_CODE.Not_found).SendString("Order not found")
 	}
 	return c.Status(HTTP_CODE.Ok).SendString("Order updated")
-}
-
-func stringPtr(s string) *string {
-	return &s
 }
 

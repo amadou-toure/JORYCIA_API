@@ -25,7 +25,7 @@ var Token = struct {
 			
 			_, err := VerifyToken(tokenString, secret)
 			if err != nil {
-				return c.Status(401).SendString("Token invalide")
+				return c.Status(401).SendString(err.Error())
 			}
 			
 			return c.Next()
