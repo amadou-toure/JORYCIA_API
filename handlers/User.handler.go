@@ -5,29 +5,47 @@ import (
 	"jorycia_api/HTTP_CODE"
 	"jorycia_api/models"
 	"jorycia_api/utils"
+	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/customer"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func CreateUser(c *fiber.Ctx)error{
+
 	var newUser models.User
 	err := c.BodyParser(&newUser)
 	if err != nil {
 		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
 	}
-	hashPassword,err := utils.HashPassword(newUser.Password)
+	hashPassword,err := utils.HashPassword(*newUser.Password)
 	if err != nil{
 		return c.Status(HTTP_CODE.Server_error).SendString("error crypting the password")
 	}
-	newUser.Password=hashPassword
+	newUser.Password = &hashPassword
 	newUser.ID = ""
 	result,err:=Database.Mg.Db.Collection("Users").InsertOne(c.Context(),newUser)
 	if err != nil {
 		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
 	}
+	if newUser.Role == "user"{
+		stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+		customerParams := &stripe.CustomerParams{
+			Email: stripe.String(newUser.Email),
+		}
+		customer,err := customer.New(customerParams)
+		if err != nil {
+			return c.Status(HTTP_CODE.Server_error).SendString("error creating stripe customer")
+		}
+		newUser.StripeCustomerID = &customer.ID
+	}
+	
 	
 	return c.Status(HTTP_CODE.Created).SendString("user " + newUser.FirstName + " created with id " + result.InsertedID.(primitive.ObjectID).Hex())
  
@@ -49,13 +67,18 @@ func Login(c *fiber.Ctx) error {
 		}
 		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
 	}
- 	passwordIsCorrect:=utils.CompareHashedPassword(body.Password,user.Password)
+ 	passwordIsCorrect:=utils.CompareHashedPassword(*body.Password, *user.Password)
 	if !passwordIsCorrect {
     return c.Status(HTTP_CODE.Bad_request).SendString("Wrong password!, try again")
 }
-
-	return c.Status(HTTP_CODE.Accepted).JSON(user)
-
+	token,err:=utils.Token.GenerateToken(user.ID)
+	if err != nil {
+		return c.Status(HTTP_CODE.Server_error).SendString("Erreur génération token")
+	}
+	return c.Status(HTTP_CODE.Accepted).JSON(fiber.Map{
+		"user": user,
+		"token": token,
+	})
 }
 
 func GetUsers(c *fiber.Ctx)error{
@@ -116,10 +139,9 @@ update:=bson.D{{Key:"$set",Value: bson.D{
 	{Key: "FirstName", Value: user.FirstName},
 {Key: "LastName", Value: user.LastName},
 {Key: "Email", Value: user.Email},
-{Key: "Password", Value: user.Password}, // Note: The password should typically not be included in such mappings due to security concerns
+{Key: "Password", Value: user.Password},
 {Key: "Phone", Value: user.Phone},
 {Key: "Address", Value: user.Address},
-{Key: "Orders", Value: user.Orders},
 {Key: "CreatedAt", Value: user.CreatedAt},
 {Key: "UpdatedAt", Value: user.UpdatedAt},
 
@@ -151,4 +173,28 @@ func DeleteUser(c *fiber.Ctx)error{
 	return c.Status(HTTP_CODE.Ok).SendString("user deleted")
 
 
+}
+
+// SaveOrUpdateOAuthToken inserts or updates an OAuthToken in the MongoDB collection.
+func SaveOrUpdateOAuthToken(c *fiber.Ctx, token models.OAuthToken) error {
+	filter := bson.M{"user_id": token.UserID, "provider": token.Provider}
+	update := bson.M{
+		"$set": bson.M{
+			"access_token":  token.AccessToken,
+			"refresh_token": token.RefreshToken,
+			"expiry_date":   token.ExpiryDate,
+			"updated_at":    time.Now(),
+		},
+		"$setOnInsert": bson.M{
+			"created_at": time.Now(),
+		},
+	}
+	opts := options.Update().SetUpsert(true)
+
+	_, err := Database.Mg.Db.Collection("OAuthTokens").UpdateOne(c.Context(), filter, update, opts)
+	if err != nil {
+		return c.Status(HTTP_CODE.Server_error).SendString("failed to store OAuth token: " + err.Error())
+	}
+
+	return nil
 }

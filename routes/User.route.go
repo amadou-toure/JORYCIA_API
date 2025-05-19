@@ -15,4 +15,5 @@ func UserRoutes(app *fiber.App) {
 	UserRoutes.Post("/", handlers.CreateUser)
     //UserRoutes.Put("/:id", handlers.UpdatePerfume)
     UserRoutes.Delete("/:id", handlers.DeleteUser)
+    UserRoutes.Post("/login", handlers.Login)
 }

@@ -142,6 +142,32 @@ func GetOneProduct(c *fiber.Ctx) error{
 
 }
 
+func UpdateProduct(c *fiber.Ctx)error{
+	var updatedProduct models.Product
+	err := c.BodyParser(&updatedProduct)
+	if err != nil {
+		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
+	}
+	id:= c.Params("id")
+	ID,err:= primitive.ObjectIDFromHex(id)
+	if err != nil{
+		return c.Status(HTTP_CODE.Bad_request).SendString("unvalid id")
+	}
+	filter:=bson.D{{Key: "_id",Value: ID}}
+	update:= bson.D{{Key: "$set", Value: updatedProduct}}
+	result,err := Database.Mg.Db.Collection("products").UpdateOne(c.Context(),filter,update)
+	if err != nil{
+		if err == mongo.ErrNoDocuments{
+			return c.Status(HTTP_CODE.Not_found).SendString("product not found")
+		}
+		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
+	}
+	if result.ModifiedCount == 0{
+		return c.Status(HTTP_CODE.Not_found).SendString("product not updated")
+	}
+	return c.Status(HTTP_CODE.Ok).SendString("Product updated")
+}
+
 
 
 
@@ -153,6 +179,17 @@ func DeleteProduct(c *fiber.Ctx)error{
 		return c.Status(HTTP_CODE.Bad_request).SendString("invalid id")
 	}
 	filter:=bson.D{{Key:"_id",Value: productId}}
+	result:= Database.Mg.Db.Collection("products").FindOne(c.Context(),filter)
+	if result.Err() != nil{
+		if result.Err() == mongo.ErrNoDocuments{
+	 		return c.Status(HTTP_CODE.Not_found).SendString("product not found")
+	 	}
+	}
+	var selectedProduct models.Product
+	result.Decode(&selectedProduct)
+	for _, item := range selectedProduct.Image{
+		DeleteImage(c,item)
+	}
 	err = Database.Mg.Db.Collection("products").FindOneAndDelete(c.Context(),filter).Err()
 	if err != nil{
 		if err == mongo.ErrNoDocuments{
@@ -160,7 +197,8 @@ func DeleteProduct(c *fiber.Ctx)error{
 		}
 		return c.Status(HTTP_CODE.Server_error).SendString(err.Error())
 	}
-	return c.Status(HTTP_CODE.Ok).SendString("user deleted")
+	return c.Status(HTTP_CODE.Ok).SendString("Product deleted")
 
 
 }
+
