@@ -5,4 +5,4 @@ RUN go mod tidy
 RUN go mod download
 RUN mkdir -p /API/Files/Images
 RUN go build
-CMD ["./API"]
+CMD ["./jorycia_api"]
