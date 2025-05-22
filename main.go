@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -9,24 +10,25 @@ import (
 	"jorycia_api/HTTP_CODE"
 	"jorycia_api/routes"
 
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Erreur lors du chargement du fichier .env")
+	dburi:=os.Getenv("MONGO_URI")
+	if dburi ==""{
+		fmt.Println("vide!!!")
+		log.Println("Tentative de connexion à MongoDB avec l'URI :")
 	}
-
-	err = Database.Connect()
+	err := Database.Connect()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
 	app := fiber.New(fiber.Config{
-		Prefork:       true,
+		Prefork:       false,
 		CaseSensitive: true,
 		StrictRouting: true,
 		BodyLimit:     10 * 1024 * 1024,
@@ -34,9 +36,12 @@ func main() {
 		AppName:       "jorycia_api v1.0.0",
 	})
 
-	// Use CORS middleware with permissive settings
+	// Use CORS middleware configured for frontend on localhost:4173, allow all headers (including Authorization), and credentials support
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
+		AllowOrigins:     "*",
+		AllowHeaders:     "*",
+		AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",
+		AllowCredentials: false,
 	}))
 
 	routes.ProductRoutes(app)
@@ -52,6 +57,16 @@ func main() {
 		}
 		return nil
 	})
-
-	app.Listen(os.Getenv("PORT"))
+	port := os.Getenv("PORT")
+	if !strings.HasPrefix(port, ":") {
+		port = ":" + port
+	}
+	
+	log.Println("Listening on port", port)
+	log.Fatal(app.Listen(port))
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered from panic: %v\n", r)
+		}
+	}()
 }

@@ -2,6 +2,8 @@ package Database
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"time"
 
 	"jorycia_api/models"
@@ -11,15 +13,20 @@ import (
 )
 var Mg models.MongoInstance
 const dbName="Jorycia"
-const mongoURI="mongodb://localhost:27017/" + dbName
+
+
 
 func Connect() error {
+    mongoURI := os.Getenv("MONGO_URI")
+    if mongoURI == "" {
+    fmt.Println("MONGO_URI est vide")}
     // Create a new MongoDB client
     client, err := mongo.NewClient(options.Client().ApplyURI(mongoURI))
     if err != nil {
+        fmt.Println("uri:",os.Getenv("MONGO_URI") )
         return err
     }
-
+   
     // Create a context with a timeout
     ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
     defer cancel() // Ensure the context is canceled to release resources

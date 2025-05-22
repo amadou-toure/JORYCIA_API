@@ -82,7 +82,7 @@ func AddProduct(c *fiber.Ctx)error{
 		if err != nil {
 			return err  
 		}
-		newProduct.Image[i] = fmt.Sprintf("%s%s/image/%s", os.Getenv("API_URL"), os.Getenv("PORT"), filename)
+		newProduct.Image[i] = fmt.Sprintf("%s:%s/image/%s", os.Getenv("API_URL"), os.Getenv("PORT"), filename)
 		
 	}
 	err = CreateStripeProduct(c, &newProduct)
@@ -151,10 +151,23 @@ func UpdateProduct(c *fiber.Ctx)error{
 	id:= c.Params("id")
 	ID,err:= primitive.ObjectIDFromHex(id)
 	if err != nil{
-		return c.Status(HTTP_CODE.Bad_request).SendString("unvalid id")
+		return c.Status(HTTP_CODE.Bad_request).SendString("invalid id")
 	}
 	filter:=bson.D{{Key: "_id",Value: ID}}
-	update:= bson.D{{Key: "$set", Value: updatedProduct}}
+	update := bson.M{
+		"$set": bson.M{
+		  "name":             updatedProduct.Name,
+		  "description":      updatedProduct.Description,
+		  "rating": updatedProduct.Rating,
+		  "inStock":updatedProduct.InStock,
+		  "price":            updatedProduct.Price,
+		  "notes":  updatedProduct.Notes,
+		  "image":          updatedProduct.Image,
+		  "metadata":         updatedProduct.Metadata,
+		  "stripeProductID":  updatedProduct.StripeProductID,
+		  "stripePriceID":    updatedProduct.StripePriceID,
+		},
+	  }
 	result,err := Database.Mg.Db.Collection("products").UpdateOne(c.Context(),filter,update)
 	if err != nil{
 		if err == mongo.ErrNoDocuments{
