@@ -82,7 +82,7 @@ func AddProduct(c *fiber.Ctx)error{
 		if err != nil {
 			return err  
 		}
-		newProduct.Image[i] = fmt.Sprintf("%s:%s/image/%s", os.Getenv("API_URL"), os.Getenv("PORT"), filename)
+		newProduct.Image[i] = fmt.Sprintf("%s/image/%s", os.Getenv("API_URL"), filename)
 		
 	}
 	err = CreateStripeProduct(c, &newProduct)
