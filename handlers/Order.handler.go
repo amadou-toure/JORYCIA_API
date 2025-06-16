@@ -104,9 +104,6 @@ func GetUsersOrders(c *fiber.Ctx) error {
 }
 func UpdateOrder(c *fiber.Ctx) error {
 	ID := c.Params("id")
-	if ID == "" {
-		return c.Status(HTTP_CODE.Bad_request).SendString("Order ID manquant")
-	}
 	orderID,err:= primitive.ObjectIDFromHex(ID)
 	if err != nil{
 		return c.Status(HTTP_CODE.Bad_request).SendString("invalid id")
