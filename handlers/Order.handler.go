@@ -103,13 +103,17 @@ func GetUsersOrders(c *fiber.Ctx) error {
 	return c.Status(HTTP_CODE.Ok).JSON(orders)
 }
 func UpdateOrder(c *fiber.Ctx) error {
-	orderID := c.Params("id")
-	if orderID == "" {
+	ID := c.Params("id")
+	if ID == "" {
 		return c.Status(HTTP_CODE.Bad_request).SendString("Order ID manquant")
+	}
+	orderID,err:= primitive.ObjectIDFromHex(ID)
+	if err != nil{
+		return c.Status(HTTP_CODE.Bad_request).SendString("invalid id")
 	}
 
 	var order models.Order
-	err := c.BodyParser(&order)
+	err = c.BodyParser(&order)
 	if err != nil {
 		return c.Status(HTTP_CODE.Bad_request).SendString("Erreur de parsing de la requête")
 	}
