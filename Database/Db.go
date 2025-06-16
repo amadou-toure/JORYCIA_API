@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"time"
-
 	"jorycia_api/models"
 
 	"go.mongodb.org/mongo-driver/mongo"
