@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"jorycia_api/Database"
 	"jorycia_api/HTTP_CODE"
-	handlers "jorycia_api/Handlers"
 	"jorycia_api/models"
 
 	"github.com/gofiber/fiber/v2"
@@ -27,7 +26,7 @@ func CreateOrder(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(HTTP_CODE.Server_error).SendString("Erreur insertion de la commande")
 	}
-	err= handlers.SendMail("sales@jorycia.ca","amadoumojatoure@outlook.fr","new order","Hello, une nouvelle commande a ete passee!")
+	err= SendMail("sales@jorycia.ca","amadoumojatoure@outlook.fr","new order","Hello, une nouvelle commande a ete passee!")
 	if err !=nil{
 		return c.Status(HTTP_CODE.Server_error).SendString("Impossible d'envoyer l'email: "+err.Error())
 	}
@@ -104,7 +103,7 @@ func GetUsersOrders(c *fiber.Ctx) error {
 	return c.Status(HTTP_CODE.Ok).JSON(orders)
 }
 func UpdateOrder(c *fiber.Ctx) error {
-	orderID := c.Params("order_id")
+	orderID := c.Params("id")
 	if orderID == "" {
 		return c.Status(HTTP_CODE.Bad_request).SendString("Order ID manquant")
 	}
