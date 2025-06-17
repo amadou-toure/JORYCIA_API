@@ -13,8 +13,8 @@ type User struct {
 	//Provider         string     `bson:"provider" json:"provider"` // "google" ou "credentials"
 	Avatar           *string    `bson:"avatar,omitempty" json:"avatar,omitempty"`
 	Role             string     `bson:"role" json:"role"` // "user" ou "admin"
-	CreatedAt        *time.Time `bson:"created_at,omitempty" json:"createdAt,omitempty"`
-	UpdatedAt        *time.Time `bson:"updated_at,omitempty" json:"updatedAt,omitempty"`
+	CreatedAt        time.Time `bson:"created_at,omitempty" json:"createdAt,omitempty"`
+	UpdatedAt        time.Time `bson:"updated_at,omitempty" json:"updatedAt,omitempty"`
 	//Verified         *bool      `bson:"verified,omitempty" json:"verified,omitempty"`
 	//OrderIDs         []string   `bson:"order_ids,omitempty" json:"orderIDs,omitempty"`
 	StripeCustomerID *string    `bson:"stripe_customer_id,omitempty" json:"stripeCustomerId,omitempty"`

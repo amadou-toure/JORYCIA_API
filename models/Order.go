@@ -9,8 +9,8 @@ type Order struct {
 	UserID          string    `bson:"user_id,omitempty" json:"userId,omitempty"`
 	Items           []OrderItem`bson:"items" json:"items"`
 	Total           float64   `bson:"total" json:"total"`
-	CreatedAt       *time.Time `bson:"created_at,omitempty" json:"createdAt,omitempty"`
-	UpdatedAt       *time.Time `bson:"updated_at,omitempty" json:"updatedAt,omitempty"`
+	CreatedAt       time.Time `bson:"created_at,omitempty" json:"createdAt,omitempty"`
+	UpdatedAt       time.Time `bson:"updated_at,omitempty" json:"updatedAt,omitempty"`
 	StripeSessionID *string    `bson:"stripe_session_id,omitempty" json:"stripeSessionId,omitempty"`
 	PaymentStatus   *string    `bson:"payment_status,omitempty" json:"paymentStatus,omitempty"`
 	Status          *string    `bson:"status" json:"status"`
