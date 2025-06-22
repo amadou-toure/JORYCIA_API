@@ -3,9 +3,9 @@ package Database
 import (
 	"context"
 	"fmt"
+	"jorycia_api/models"
 	"os"
 	"time"
-	"jorycia_api/models"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

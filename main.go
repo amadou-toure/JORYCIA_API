@@ -14,9 +14,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	dburi:=os.Getenv("MONGO_URI")
 	if dburi ==""{
 		fmt.Println("vide!!!")
