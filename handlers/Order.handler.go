@@ -24,7 +24,7 @@ func CreateOrder(c *fiber.Ctx) error {
 		return c.Status(HTTP_CODE.Bad_request).SendString("Erreur de parsing de la requête")
 	}
 	fmt.Println(Order)
-	 Time:=time.Now()
+	 Time:=time.Now().UTC()
 	 Order.CreatedAt = &Time
 	fmt.Println(Order)
 	_, err = Database.Mg.Db.Collection("Order").InsertOne(c.Context(), Order)
