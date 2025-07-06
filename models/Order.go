@@ -12,7 +12,7 @@ type Order struct {
 	CreatedAt       *time.Time    `bson:"created_at" json:"createdAt"`
 	UpdatedAt       *time.Time    `bson:"updated_at,omitempty" json:"updatedAt,omitempty"`
 	StripeSessionID *string       `bson:"stripe_session_id,omitempty" json:"stripeSessionId,omitempty"`
-	ShippingAddress StripeAddress `bson:"stripe_shipping_address" json:"stripeShippingAddress"`
+	ShippingAddress StripeAddress `bson:"stripe_shipping_address" json:"shippingAddress"`
 	PaymentStatus   *string       `bson:"payment_status" json:"paymentStatus"`
 	Status          *string       `bson:"status" json:"status"`
 }
