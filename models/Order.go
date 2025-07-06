@@ -5,7 +5,7 @@ import (
 )
 
 type Order struct {
-	ID              string        `bson:"_id" json:"id"`
+	ID              string        `bson:"_id,omitempty" json:"id"`
 	UserID          string        `bson:"user_id,omitempty" json:"userId,omitempty"`
 	Items           []OrderItem   `bson:"items" json:"items"`
 	Total           float64       `bson:"total" json:"total"`
