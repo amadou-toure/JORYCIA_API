@@ -28,7 +28,7 @@ func CreateOrder(c *fiber.Ctx) error {
 	fmt.Println(Order)
 	_, err = Database.Mg.Db.Collection("Order").InsertOne(c.Context(), Order)
 	if err != nil {
-		return c.Status(HTTP_CODE.Server_error).SendString("Erreur insertion de la commande")
+		return c.Status(HTTP_CODE.Server_error).SendString("Erreur insertion de la commande: "+err.Error())
 	}
 
 	// err= SendMail("sales@jorycia.ca","amadoumojatoure@outlook.fr","new order","Hello, une nouvelle commande a ete passee!")
