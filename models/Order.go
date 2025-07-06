@@ -12,7 +12,7 @@ type Order struct {
 	CreatedAt       *time.Time    `bson:"created_at" json:"createdAt"`
 	UpdatedAt       *time.Time    `bson:"updated_at,omitempty" json:"updatedAt,omitempty"`
 	StripeSessionID *string       `bson:"stripe_session_id,omitempty" json:"stripeSessionId,omitempty"`
-	ShippingAddress *StripeAddress `bson:"stripe_shipping_address" json:"stripeShippingAddress"`
+	ShippingAddress StripeAddress `bson:"stripe_shipping_address" json:"stripeShippingAddress"`
 	PaymentStatus   *string       `bson:"payment_status" json:"paymentStatus"`
 	Status          *string       `bson:"status" json:"status"`
 }
@@ -25,9 +25,9 @@ type OrderItem struct {
 }
 
 type StripeAddress struct {
-	City       string `bson:"city" json:"city"`
-	Country    string `bson:"country" json:"country"`
-	Line1      string `bson:"line1" json:"line1"`
+	City       *string `bson:"city" json:"city"`
+	Country    *string `bson:"country" json:"country"`
+	Line1      *string `bson:"line1" json:"line1"`
 	Line2      string `bson:"line2,omitempty" json:"line2,omitempty"`
 	PostalCode string `bson:"postal_code" json:"postal_code"`
 	State      string `bson:"state" json:"state"`
