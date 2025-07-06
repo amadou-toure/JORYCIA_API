@@ -18,11 +18,14 @@ import (
 // CreateOrder crée une nouvelle commande à partir d'un panier
 func CreateOrder(c *fiber.Ctx) error {
 	var Order models.Order
+	fmt.Println(Order.ShippingAddress)
+	fmt.Println( Order.ShippingAddress)
 	err := c.BodyParser(&Order)
 	if err != nil {
 		fmt.Println(Order)
 		return c.Status(HTTP_CODE.Bad_request).SendString("Erreur de parsing de la requête")
 	}
+
 	now := time.Now().UTC()
 	Order.CreatedAt = &now
 	fmt.Println(Order)
