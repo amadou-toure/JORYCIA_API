@@ -5,6 +5,7 @@ import (
 	"jorycia_api/Database"
 	"jorycia_api/HTTP_CODE"
 	"jorycia_api/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -19,17 +20,22 @@ func CreateOrder(c *fiber.Ctx) error {
 	var Order models.Order
 	err := c.BodyParser(&Order)
 	if err != nil {
+		fmt.Println(Order)
 		return c.Status(HTTP_CODE.Bad_request).SendString("Erreur de parsing de la requête")
 	}
+	fmt.Println(Order)
+	now := time.Now().UTC()
+	Order.CreatedAt = &now
 	fmt.Println(Order)
 	_, err = Database.Mg.Db.Collection("Order").InsertOne(c.Context(), Order)
 	if err != nil {
 		return c.Status(HTTP_CODE.Server_error).SendString("Erreur insertion de la commande")
 	}
-	err= SendMail("sales@jorycia.ca","amadoumojatoure@outlook.fr","new order","Hello, une nouvelle commande a ete passee!")
-	if err !=nil{
-		return c.Status(HTTP_CODE.Server_error).SendString("Impossible d'envoyer l'email: "+err.Error())
-	}
+
+	// err= SendMail("sales@jorycia.ca","amadoumojatoure@outlook.fr","new order","Hello, une nouvelle commande a ete passee!")
+	// if err !=nil{
+	// 	return c.Status(HTTP_CODE.Server_error).SendString("Impossible d'envoyer l'email: "+err.Error())
+	// }
 	return c.Status(HTTP_CODE.Created).JSON(Order)
 }
 

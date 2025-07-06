@@ -1,8 +1,8 @@
 FROM golang:1.23
 WORKDIR /API
-COPY . .
-RUN go mod tidy
+COPY go.mod go.sum ./
 RUN go mod download
-RUN mkdir -p /API/Files/Images
+COPY . .
 RUN go build
+RUN mkdir -p /API/Files/Images
 CMD ["./jorycia_api"]
