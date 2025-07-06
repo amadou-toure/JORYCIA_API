@@ -19,8 +19,6 @@ import (
 func CreateOrder(c *fiber.Ctx) error {
 	var Order models.Order
 	err := c.BodyParser(&Order)
-	fmt.Println(err)
-	fmt.Println(&err)
 	if err != nil {
 		fmt.Println(Order)
 		return c.Status(HTTP_CODE.Bad_request).SendString("Erreur de parsing de la requête")
