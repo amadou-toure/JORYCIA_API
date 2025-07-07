@@ -34,10 +34,10 @@ func CreateOrder(c *fiber.Ctx) error {
 		return c.Status(HTTP_CODE.Server_error).SendString("Erreur insertion de la commande: "+err.Error())
 	}
 
-	// err= SendMail("sales@jorycia.ca","amadoumojatoure@outlook.fr","new order","Hello, une nouvelle commande a ete passee!")
-	// if err !=nil{
-	// 	return c.Status(HTTP_CODE.Server_error).SendString("Impossible d'envoyer l'email: "+err.Error())
-	// }
+	err= SendMail("support@jorycia.ca","amadoumojatoure@outlook.fr","new order","Hello, une nouvelle commande a ete passee!")
+	if err !=nil{
+		return c.Status(HTTP_CODE.Server_error).SendString("Impossible d'envoyer l'email: "+err.Error())
+	}
 	return c.Status(HTTP_CODE.Created).JSON(Order)
 }
 
